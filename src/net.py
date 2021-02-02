@@ -4,7 +4,7 @@ import torch.optim as optim
 
  
 class Net(nn.Module):
-    def __init__(self):
+    def __init__(self, device, epochs, batch_size):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, 6, 5)
         self.pool = nn.MaxPool2d(2, 2)
@@ -15,7 +15,10 @@ class Net(nn.Module):
         
         self.criterion = nn.CrossEntropyLoss()
         self.optimizer = optim.SGD(self.parameters(), lr=0.001, momentum=0.9)
-    
+        self.device = device
+        self.epochs = epochs
+        self.batch = batch_size
+        
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
@@ -28,13 +31,14 @@ class Net(nn.Module):
     def train(self, train_loader):
         result = []
         
-        for epoch in range(2):  # loop over the dataset multiple times
+        for epoch in self.epochs:  # loop over the dataset multiple times
             running_loss = 0.0
             for i, data in enumerate(train_loader, 0):
                 # get the inputs; data is a list of [inputs, labels]
                 
                 inputs, labels = data
-                
+                inputs.to(self.device)
+                labels.to(self.device)
                 
                 # zero the parameter gradients
                 self.optimizer.zero_grad()
