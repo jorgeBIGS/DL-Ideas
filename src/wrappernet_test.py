@@ -1,6 +1,6 @@
 import torchvision
 import torchvision.transforms as transforms
-import net
+import wrapper_net
 import visualizer
 from torch.utils.data.dataloader import DataLoader
 import torch.cuda as cuda
@@ -31,10 +31,10 @@ if __name__=='__main__':
                'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
     
     
-    net = net.Net(dev)
+    wrapper_net = wrapper_net.WrapperNet(dev)
     
     #Si quito esto me funciona porque lo ejecuta en la cpu
-    #net.to(dev)
+    #wrapper_net.to(dev)
     
-    visualizer.show_iterable(net.train(TRAIN_LOADER))
+    visualizer.show_iterable(wrapper_net.train(TRAIN_LOADER))
     
