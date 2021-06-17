@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
+import torch.optim as optimal
 
 
 class EnsembleNet(nn.Module):
-    def __init__(self, models: list, criterion, optimizer, epochs, device):
+    def __init__(self, models: list, epochs, device):
         super(EnsembleNet, self).__init__()
         self.models = models
         total = 0
@@ -16,28 +17,29 @@ class EnsembleNet(nn.Module):
         self.relu = nn.ReLU(total)
         self.fc1 = nn.Linear(in_features=total, out_features=10)
         self.device = device
-        self.criterion = criterion
-        self.optimizer = optimizer
         self.epochs = epochs
+        self.criterion = nn.CrossEntropyLoss()
+        self.optimizer = optimal.SGD(self.parameters(), lr=0.001, momentum=0.9)
         self.to(device)
 
     def forward(self, x):
+        # clone to make sure x is not changed by inplace methods
         results = [model(x.clone()) for model in self.models]
-        x = torch.flatten(torch.tensor(results))
-        #x = results[0]  # clone to make sure x is not changed by inplace methods
-        #x = x.view(x.size(0), -1)
+        x = results[0]
+        x = x.view(x.size(0), -1)
 
-        #for i in range(1, len(results)):
-        #    x2 = results[i]
-        #    x2 = x2.view(x2.size(0), -1)
-        #    x = torch.cat((x, x2), dim=1)
+        for i in range(1, len(results)):
+            x2 = results[i]
+            x2 = x2.view(x2.size(0), -1)
+            x = torch.cat((x, x2), dim=1)
 
         x = self.relu(x)
         return self.fc1(x)
 
     def under_train(self, train_loader):
         result = []
-        for epoch in range(self.epochs):  # loop over the dataset multiple times
+        for epoch in range(1, self.epochs + 1):  # loop over the dataset multiple times
+            losses = 0.0
             for i, data in enumerate(train_loader, 0):
                 # get the inputs; data is a list of [inputs, labels]
 
@@ -50,10 +52,11 @@ class EnsembleNet(nn.Module):
                 # forward + backward + optimize
                 outputs = self(inputs)
                 loss = self.criterion(outputs, labels)
+                losses += loss.item()
                 loss.backward()
-                result += [loss.item()]
-                self.optimizer.step()
 
+                self.optimizer.step()
+            result += [(epoch, loss.item())]
         return result
 
     def test(self, test_loader):
