@@ -39,10 +39,11 @@ if __name__ == '__main__':
     # CLASSES = ('plane', 'car', 'bird', 'cat',
     #            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
     #timm models for ImageNet
-    model1 = timm.create_model('tf_efficientnet_b8', pretrained=True)
-    model2 = timm.create_model('resnet50', pretrained=True)
-    model3 = timm.create_model('tv_resnet34', pretrained=True)
-    wrapper_net = wr.EnsembleNet([model1, model2, model3], NUM_EPOCHS, dev)
+    model_names = timm.list_models(pretrained=True)
+    models = [timm.create_model(name, pretrained=True) for name in model_names]
+    #model2 = timm.create_model('resnet50', pretrained=True)
+    #model3 = timm.create_model('tv_resnet34', pretrained=True)
+    wrapper_net = wr.EnsembleNet(models, NUM_EPOCHS, dev)
     losses = wrapper_net.under_train(TRAIN_LOADER)
     print('Accuracy: ', wrapper_net.test(TEST_LOADER))
     print(losses)
