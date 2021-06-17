@@ -6,6 +6,7 @@ from torch.utils.data.dataloader import DataLoader
 import torch.nn as nn
 import torch.optim as optimal
 import timm
+import matplotlib.pyplot as plt
 
 import ensembles.ensemble_net as wr
 
@@ -38,5 +39,6 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
     optimizer = optimal.SGD(model1.parameters(), lr=0.001, momentum=0.9)
     wrapper_net = wr.EnsembleNet([model1, model2, model3], criterion, optimizer, 2, dev)
-    wrapper_net.under_train(TRAIN_LOADER)
+    losses = wrapper_net.under_train(TRAIN_LOADER)
     print('Accuracy: ', wrapper_net.test(TEST_LOADER))
+    plt.plot(losses)

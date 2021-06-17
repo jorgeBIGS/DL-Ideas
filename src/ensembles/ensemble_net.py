@@ -23,19 +23,20 @@ class EnsembleNet(nn.Module):
 
     def forward(self, x):
         results = [model(x.clone()) for model in self.models]
+        x = torch.flatten(torch.tensor(results))
+        #x = results[0]  # clone to make sure x is not changed by inplace methods
+        #x = x.view(x.size(0), -1)
 
-        x = results[0]  # clone to make sure x is not changed by inplace methods
-        x = x.view(x.size(0), -1)
-
-        for i in range(1, len(results)):
-            x2 = results[i]
-            x2 = x2.view(x2.size(0), -1)
-            x = torch.cat((x, x2), dim=1)
+        #for i in range(1, len(results)):
+        #    x2 = results[i]
+        #    x2 = x2.view(x2.size(0), -1)
+        #    x = torch.cat((x, x2), dim=1)
 
         x = self.relu(x)
         return self.fc1(x)
 
     def under_train(self, train_loader):
+        result = []
         for epoch in range(self.epochs):  # loop over the dataset multiple times
             for i, data in enumerate(train_loader, 0):
                 # get the inputs; data is a list of [inputs, labels]
@@ -50,7 +51,10 @@ class EnsembleNet(nn.Module):
                 outputs = self(inputs)
                 loss = self.criterion(outputs, labels)
                 loss.backward()
+                result += [loss.item()]
                 self.optimizer.step()
+
+        return result
 
     def test(self, test_loader):
         self.train()
